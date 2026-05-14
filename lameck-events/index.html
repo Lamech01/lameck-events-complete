@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lameck & Co. Events — Kenya's Premier Event Planners</title>
+  <meta name="description" content="Lameck & Co. Events — Nationwide Kenya's most trusted event planning company. Weddings, corporates, birthdays, funerals, ruracio and more."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Jost:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E8C97A;
+      --gold-dark: #8B6914;
+      --gold-shine: #F5E4B0;
+      --ivory: #FDFAF4;
+      --blush: #F2C4CE;
+      --blush-deep: #E8A0AE;
+      --blush-light: #FBE9ED;
+      --cream: #F8F1E4;
+      --dark: #2C1A0E;
+      --dark2: #3D2514;
+      --text: #3A2512;
+      --text-light: #7A5C3F;
+      --white: #FFFFFF;
+      --sidebar-w: 260px;
+      --transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+      --success: #2ea043;
+      --error: #cf222e;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--ivory);
+      color: var(--text);
+      overflow-x: hidden;
+      display: flex;
+    }
+
+    /* ── TOAST NOTIFICATIONS ── */
+    #toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      pointer-events: none;
+    }
+    .toast {
+      padding: 0.9rem 1.4rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-family: 'Jost', sans-serif;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      pointer-events: all;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      animation: toastIn 0.3s ease forwards;
+      max-width: 320px;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
+    .toast.info { background: var(--dark); border-left: 3px solid var(--gold); }
+    .toast.out { animation: toastOut 0.3s ease forwards; }
+    @keyframes toastIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(40px); } }
+
+    /* ── LOADING OVERLAY ── */
+    #page-loader {
+      position: fixed;
+      inset: 0;
+      background: var(--dark);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      transition: opacity 0.5s ease;
+    }
+    #page-loader.hidden { opacity: 0; pointer-events: none; }
+    .loader-script {
+      font-family: 'Great Vibes', cursive;
+      font-size: 3rem;
+      color: var(--gold-light);
+    }
+    .loader-bar {
+      width: 200px;
+      height: 2px;
+      background: rgba(201,168,76,0.2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .loader-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+      animation: loaderFill 1.5s ease forwards;
+    }
+    @keyframes loaderFill { from { width:0; } to { width:100%; } }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: linear-gradient(175deg, var(--dark) 0%, var(--dark2) 100%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding: 2.5rem 0;
+      box-shadow: 4px 0 30px rgba(44,26,14,0.3);
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      text-align: center;
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+    }
+    .sidebar-logo .script {
+      font-family: 'Great Vibes', cursive;
+      font-size: 2rem;
+      color: var(--gold-light);
+      display: block;
+      line-height: 1.1;
+    }
+    .sidebar-logo .tagline {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      color: rgba(201,168,76,0.6);
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 2rem 0;
+      list-style: none;
+    }
+    .sidebar-nav li { margin: 0.2rem 0; }
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.85rem 1.8rem;
+      color: rgba(253,250,244,0.6);
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: var(--transition);
+      border-left: 2px solid transparent;
+      position: relative;
+    }
+    .sidebar-nav a i { width: 18px; font-size: 0.9rem; }
+    .sidebar-nav a:hover, .sidebar-nav a.active {
+      color: var(--gold-light);
+      background: rgba(201,168,76,0.08);
+      border-left-color: var(--gold);
+    }
+    .sidebar-nav a.active::after {
+      content: '';
+      position: absolute;
+      right: 1.5rem;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+    .sidebar-contact-block {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(201,168,76,0.2);
+      margin-top: auto;
+    }
+    .sidebar-contact-block p {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(201,168,76,0.5);
+      margin-bottom: 0.8rem;
+    }
+    .sidebar-contact-block a {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: rgba(253,250,244,0.7);
+      text-decoration: none;
+      font-size: 0.78rem;
+      margin-bottom: 0.5rem;
+      transition: color 0.3s;
+    }
+    .sidebar-contact-block a:hover { color: var(--gold-light); }
+    .sidebar-contact-block a i { color: var(--gold); font-size: 0.85rem; width: 16px; }
+
+    /* Admin badge in sidebar */
+    .admin-badge {
+      display: none;
+      background: var(--gold);
+      color: var(--dark);
+      font-size: 0.6rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      margin-left: auto;
+    }
+    body.admin-mode .admin-badge { display: inline-block; }
+
+    /* MOBILE HAMBURGER */
+    #hamburger {
+      display: none;
+      position: fixed;
+      top: 1rem; left: 1rem;
+      z-index: 1100;
+      background: var(--dark);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      align-items: center;
+      justify-content: center;
+    }
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+
+    /* ── MAIN CONTENT ── */
+    #main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      min-height: 100vh;
+    }
+
+    /* CANVAS & PARTICLES */
+    #particle-canvas {
+      position: fixed;
+      top: 0; left: var(--sidebar-w);
+      width: calc(100% - var(--sidebar-w));
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* PETALS */
+    .petal {
+      position: fixed;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      border-radius: 50% 0 50% 0;
+      animation: petalFall linear infinite;
+    }
+    @keyframes petalFall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 0.8; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    section { position: relative; z-index: 2; }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      filter: brightness(0.45) saturate(0.8);
+      transform: scale(1.05);
+      transition: transform 8s ease;
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(44,26,14,0.7) 0%, rgba(201,168,76,0.15) 50%, rgba(242,196,206,0.1) 100%);
+    }
+    .shimmer-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 60% 40%, rgba(201,168,76,0.08) 0%, transparent 70%);
+      animation: shimmerPulse 4s ease-in-out infinite alternate;
+    }
+    @keyframes shimmerPulse { 0% { opacity:0.5; } 100% { opacity:1; } }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 2rem;
+      max-width: 800px;
+    }
+    .hero-eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 1s 0.3s forwards;
+    }
+    .hero-title {
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(3.5rem, 8vw, 6rem);
+      color: var(--white);
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+      opacity: 0;
+      animation: fadeUp 1s 0.5s forwards;
+      text-shadow: 0 2px 30px rgba(201,168,76,0.4);
+    }
+    .hero-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      color: rgba(253,250,244,0.75);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 1s 0.7s forwards;
+    }
+    .hero-desc {
+      font-size: 1rem;
+      color: rgba(253,250,244,0.7);
+      max-width: 500px;
+      margin: 0 auto 3rem;
+      line-height: 1.8;
+      opacity: 0;
+      animation: fadeUp 1s 0.9s forwards;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 1.2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 1s 1.1s forwards;
+    }
+    .btn-primary {
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      color: var(--dark);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(201,168,76,0.4); }
+    .btn-outline {
+      padding: 1rem 2.5rem;
+      background: transparent;
+      color: var(--gold-light);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1px solid rgba(201,168,76,0.5);
+      cursor: pointer;
+      transition: var(--transition);
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    }
+    .btn-outline:hover { background: rgba(201,168,76,0.1); border-color: var(--gold-light); transform: translateY(-3px); }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+
+    .hero-stats {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 3;
+      background: rgba(44,26,14,0.85);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(201,168,76,0.2);
+    }
+    .stat-item { flex:1; max-width:200px; padding:1.5rem 1rem; text-align:center; border-right:1px solid rgba(201,168,76,0.15); }
+    .stat-item:last-child { border-right:none; }
+    .stat-num { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:600; color:var(--gold-light); display:block; }
+    .stat-label { font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(253,250,244,0.5); }
+
+    /* ── SECTION STYLES ── */
+    .section-header { text-align:center; margin-bottom:4rem; }
+    .section-eyebrow { font-size:0.7rem; letter-spacing:0.4em; text-transform:uppercase; color:var(--gold); margin-bottom:0.8rem; display:block; }
+    .section-title { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,4vw,3rem); font-weight:600; color:var(--dark); line-height:1.2; }
+    .section-title em { font-style:italic; color:var(--gold-dark); }
+    .divider { width:80px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:1.2rem auto 0; }
+
+    .reveal { opacity:0; transform:translateY(40px); transition:opacity 0.8s ease,transform 0.8s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    /* ── ABOUT ── */
+    #about { padding:7rem 4rem; background:var(--ivory); }
+    .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:5rem; align-items:center; max-width:1100px; margin:0 auto; }
+    .about-image-stack { position:relative; height:500px; }
+    .about-img-main { position:absolute; top:0; left:0; width:75%; height:80%; object-fit:cover; border-radius:2px; box-shadow:0 20px 60px rgba(44,26,14,0.2); }
+    .about-img-accent { position:absolute; bottom:0; right:0; width:55%; height:55%; object-fit:cover; border-radius:2px; border:6px solid var(--ivory); box-shadow:0 20px 40px rgba(44,26,14,0.15); }
+    .about-badge { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--gold); color:var(--dark); width:100px; height:100px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; text-align:center; box-shadow:0 10px 30px rgba(201,168,76,0.4); border:3px solid var(--ivory); }
+    .about-badge span:first-child { font-size:1.8rem; font-weight:700; line-height:1; }
+    .about-badge span:last-child { font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; }
+    .about-text .section-header { text-align:left; }
+    .about-text .divider { margin:1.2rem 0 0; }
+    .about-body { margin-top:1.8rem; color:var(--text-light); line-height:1.9; font-size:0.95rem; }
+    .about-values { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:2rem; }
+    .value-item { display:flex; align-items:flex-start; gap:0.7rem; }
+    .value-item i { color:var(--gold); font-size:1rem; margin-top:2px; flex-shrink:0; }
+    .value-item p { font-size:0.85rem; color:var(--text-light); line-height:1.5; }
+    .value-item strong { color:var(--dark); font-weight:500; display:block; }
+
+    /* ── EVENTS / SERVICES ── */
+    #events { padding:7rem 4rem; background:var(--cream); }
+    .events-tabs { display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom:3rem; }
+    .event-tab { padding:0.55rem 1.3rem; border:1px solid rgba(201,168,76,0.3); background:transparent; color:var(--text-light); font-family:'Jost',sans-serif; font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:var(--transition); border-radius:2px; }
+    .event-tab:hover, .event-tab.active { background:var(--gold); color:var(--dark); border-color:var(--gold); }
+    .event-display { position:relative; border-radius:4px; overflow:hidden; min-height:520px; max-width:1100px; margin:0 auto; }
+    .event-panel { display:none; position:relative; }
+    .event-panel.active { display:block; }
+    .event-bg { width:100%; height:520px; object-fit:cover; display:block; filter:brightness(0.5) saturate(0.7); }
+    .event-content-overlay { position:absolute; inset:0; background:linear-gradient(90deg,rgba(44,26,14,0.9) 40%,rgba(44,26,14,0.2) 100%); display:flex; align-items:center; padding:4rem; }
+    .event-info { max-width:450px; }
+    .event-icon { width:56px; height:56px; background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.4); border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:1.5rem; font-size:1.3rem; color:var(--gold-light); }
+    .event-info h3 { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:600; color:var(--white); margin-bottom:1rem; }
+    .event-info p { color:rgba(253,250,244,0.75); line-height:1.8; font-size:0.9rem; margin-bottom:1.5rem; }
+    .event-features { list-style:none; margin-bottom:2rem; }
+    .event-features li { font-size:0.82rem; color:rgba(253,250,244,0.65); padding:0.3rem 0; display:flex; align-items:center; gap:0.6rem; }
+    .event-features li i { color:var(--gold); font-size:0.7rem; }
+
+    /* Event actions (admin) */
+    .event-admin-actions {
+      display: none;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    body.admin-mode .event-admin-actions { display: flex; }
+    .event-del-btn {
+      padding: 0.4rem 0.8rem;
+      background: rgba(207,34,46,0.8);
+      color: white;
+      border: none;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-family: 'Jost', sans-serif;
+    }
+
+    /* Add Event */
+    .add-event-btn { display:flex; align-items:center; gap:0.6rem; margin:2rem auto 0; padding:0.7rem 1.5rem; background:transparent; border:1px dashed rgba(201,168,76,0.5); color:var(--gold-dark); font-size:0.8rem; letter-spacing:0.1em; cursor:pointer; transition:var(--transition); font-family:'Jost',sans-serif; }
+    .add-event-btn:hover { background:rgba(201,168,76,0.08); border-color:var(--gold); }
+
+    /* Loading skeleton */
+    .skeleton { background: linear-gradient(90deg, var(--cream) 25%, var(--ivory) 50%, var(--cream) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 3px; }
+    @keyframes shimmer { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
+    .skeleton-tab { height: 34px; width: 100px; display: inline-block; }
+    .skeleton-panel { height: 520px; max-width: 1100px; margin: 0 auto; }
+
+    /* ── MODALS ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(44,26,14,0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--ivory); border-radius:4px; padding:2.5rem; width:90%; max-width:500px; position:relative; box-shadow:0 30px 80px rgba(44,26,14,0.3); border-top:3px solid var(--gold); max-height: 90vh; overflow-y: auto; }
+    .modal-box h3 { font-family:'Cormorant Garamond',serif; font-size:1.6rem; color:var(--dark); margin-bottom:1.5rem; }
+    .modal-close { position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.2rem; color:var(--text-light); cursor:pointer; }
+    .form-group { margin-bottom:1.2rem; }
+    .form-group label { display:block; font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-light); margin-bottom:0.4rem; }
+    .form-group input, .form-group textarea, .form-group select {
+      width:100%; padding:0.75rem 1rem; border:1px solid rgba(201,168,76,0.3); background:var(--white); color:var(--text); font-family:'Jost',sans-serif; font-size:0.9rem; border-radius:2px; outline:none; transition:border-color 0.3s;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color:var(--gold); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    /* ── GALLERY ── */
+    #gallery { padding:7rem 4rem; background:var(--ivory); }
+    .admin-bar { display:none; background:var(--dark); padding:1rem 1.5rem; border-radius:4px; margin-bottom:2rem; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+    .admin-bar.visible { display:flex; }
+    .admin-bar p { color:var(--gold-light); font-size:0.82rem; }
+    .admin-upload-btn { display:flex; align-items:center; gap:0.6rem; padding:0.6rem 1.2rem; background:var(--gold); color:var(--dark); border:none; cursor:pointer; font-family:'Jost',sans-serif; font-size:0.78rem; font-weight:500; border-radius:2px; transition:var(--transition); }
+    .admin-upload-btn:hover { background:var(--gold-light); }
+    #photo-upload-input { display:none; }
+
+    .gallery-filter { display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom:2.5rem; }
+    .g-filter-btn { padding:0.45rem 1rem; background:transparent; border:1px solid rgba(201,168,76,0.25); color:var(--text-light); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; border-radius:2px; font-family:'Jost',sans-serif; transition:var(--transition); }
+    .g-filter-btn.active, .g-filter-btn:hover { background:var(--gold); color:var(--dark); border-color:var(--gold); }
+
+    .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; max-width:1100px; margin:0 auto; }
+    .gallery-item { position:relative; overflow:hidden; border-radius:2px; aspect-ratio:4/3; cursor:pointer; background:var(--cream); }
+    .gallery-item img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s ease; display:block; }
+    .gallery-item:hover img { transform:scale(1.08); }
+    .gallery-item-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(44,26,14,0.8) 0%,transparent 60%); opacity:0; transition:opacity 0.4s; display:flex; align-items:flex-end; padding:1.2rem; }
+    .gallery-item:hover .gallery-item-overlay { opacity:1; }
+    .gallery-item-label { font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--white); font-style:italic; }
+    .gallery-item-actions { position:absolute; top:0.6rem; right:0.6rem; display:none; gap:0.4rem; }
+    body.admin-mode .gallery-item-actions { display:flex; }
+    .gallery-del-btn { width:30px; height:30px; background:rgba(220,50,50,0.85); border:none; border-radius:50%; color:white; font-size:0.7rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+    /* Upload progress */
+    .upload-progress { display:none; margin-top:1rem; }
+    .upload-progress.active { display:block; }
+    .progress-bar { height:4px; background:rgba(201,168,76,0.2); border-radius:2px; overflow:hidden; margin-top:0.5rem; }
+    .progress-fill { height:100%; background:var(--gold); border-radius:2px; transition:width 0.3s ease; width:0; }
+
+    /* Lightbox */
+    #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:3000; align-items:center; justify-content:center; flex-direction:column; }
+    #lightbox.open { display:flex; }
+    #lightbox img { max-width:90vw; max-height:80vh; object-fit:contain; border:1px solid rgba(201,168,76,0.2); }
+    #lightbox-caption { margin-top:1rem; font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-style:italic; color:rgba(255,255,255,0.6); }
+    .lightbox-close { position:fixed; top:1.5rem; right:1.5rem; background:none; border:1px solid rgba(255,255,255,0.2); color:white; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; }
+    .lightbox-nav { position:fixed; top:50%; transform:translateY(-50%); background:rgba(201,168,76,0.2); border:1px solid rgba(201,168,76,0.3); color:var(--gold-light); width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:background 0.3s; }
+    .lightbox-nav:hover { background:rgba(201,168,76,0.4); }
+    #lightbox-prev { left:1.5rem; }
+    #lightbox-next { right:1.5rem; }
+
+    /* ── PACKAGES ── */
+    #packages { padding:7rem 4rem; background:linear-gradient(135deg,var(--dark) 0%,var(--dark2) 100%); position:relative; overflow:hidden; }
+    #packages::before { content:''; position:absolute; inset:0; background:url('https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1600&q=80') center/cover; opacity:0.08; }
+    #packages .section-title { color:var(--ivory); }
+    #packages .section-eyebrow { color:var(--gold-light); }
+    .packages-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:2rem; max-width:1100px; margin:0 auto; }
+    .package-card { background:rgba(253,250,244,0.05); border:1px solid rgba(201,168,76,0.15); border-radius:4px; padding:2.5rem 2rem; text-align:center; transition:var(--transition); position:relative; overflow:hidden; }
+    .package-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:0; transition:opacity 0.4s; }
+    .package-card:hover { background:rgba(253,250,244,0.08); border-color:rgba(201,168,76,0.4); transform:translateY(-6px); }
+    .package-card:hover::before { opacity:1; }
+    .package-card.featured { background:rgba(201,168,76,0.1); border-color:rgba(201,168,76,0.4); }
+    .package-card.featured::before { opacity:1; }
+    .featured-badge { position:absolute; top:1rem; right:1rem; background:var(--gold); color:var(--dark); font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; padding:0.3rem 0.7rem; border-radius:20px; }
+    .pkg-icon { width:60px; height:60px; margin:0 auto 1.5rem; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.25); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.4rem; color:var(--gold-light); }
+    .pkg-name { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:600; color:var(--ivory); margin-bottom:0.3rem; }
+    .pkg-subtitle { font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:1.5rem; }
+    .pkg-features { list-style:none; margin-bottom:2rem; text-align:left; }
+    .pkg-features li { font-size:0.85rem; color:rgba(253,250,244,0.65); padding:0.45rem 0; border-bottom:1px solid rgba(201,168,76,0.08); display:flex; align-items:center; gap:0.7rem; }
+    .pkg-features li i { color:var(--gold); font-size:0.7rem; }
+    .pkg-cta { display:inline-block; width:100%; padding:0.9rem; border:1px solid rgba(201,168,76,0.4); color:var(--gold-light); text-decoration:none; font-size:0.75rem; letter-spacing:0.15em; text-transform:uppercase; transition:var(--transition); cursor:pointer; background:transparent; font-family:'Jost',sans-serif; }
+    .pkg-cta:hover, .package-card.featured .pkg-cta { background:var(--gold); color:var(--dark); border-color:var(--gold); }
+
+    /* ── TESTIMONIALS ── */
+    #testimonials { padding:7rem 4rem; background:var(--blush-light); overflow:hidden; }
+    .testimonials-track { max-width:1100px; margin:0 auto; }
+    .testimonials-slider { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
+    .testimonial-card { background:var(--white); border-radius:4px; padding:2rem; box-shadow:0 4px 20px rgba(44,26,14,0.06); border-bottom:3px solid var(--gold); }
+    .t-stars { color:var(--gold); font-size:0.9rem; margin-bottom:1rem; letter-spacing:2px; }
+    .t-quote { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-style:italic; color:var(--text); line-height:1.7; margin-bottom:1.5rem; }
+    .t-author { display:flex; align-items:center; gap:0.8rem; }
+    .t-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--blush-deep),var(--gold)); display:flex; align-items:center; justify-content:center; color:white; font-weight:600; font-size:0.9rem; flex-shrink:0; }
+    .t-name { font-weight:500; font-size:0.85rem; color:var(--dark); }
+    .t-event { font-size:0.72rem; color:var(--text-light); margin-top:1px; }
+
+    /* Testimonial submit form */
+    .submit-testimonial-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 2.5rem auto 0;
+      padding: 0.7rem 1.5rem;
+      background: transparent;
+      border: 1px dashed rgba(232,160,174,0.6);
+      color: var(--blush-deep);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'Jost', sans-serif;
+    }
+    .submit-testimonial-btn:hover { background: rgba(232,160,174,0.1); }
+
+    /* ── CONTACT ── */
+    #contact { padding:7rem 4rem; background:var(--ivory); }
+    .contact-grid { display:grid; grid-template-columns:1.2fr 1fr; gap:4rem; max-width:1100px; margin:0 auto; }
+    .contact-form-box { background:var(--white); border-radius:4px; padding:3rem; box-shadow:0 10px 40px rgba(44,26,14,0.08); border-top:3px solid var(--gold); }
+    .contact-form-box h3 { font-family:'Cormorant Garamond',serif; font-size:1.8rem; color:var(--dark); margin-bottom:0.4rem; }
+    .contact-form-box p { font-size:0.85rem; color:var(--text-light); margin-bottom:2rem; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .contact-submit { width:100%; padding:1rem; background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:var(--dark); border:none; font-family:'Jost',sans-serif; font-size:0.8rem; font-weight:500; letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; transition:var(--transition); border-radius:2px; margin-top:0.5rem; }
+    .contact-submit:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(201,168,76,0.35); }
+    .contact-submit:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    .form-success { display:none; text-align:center; padding:2rem; }
+    .form-success i { font-size:3rem; color:var(--gold); margin-bottom:1rem; }
+    .form-success h4 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; color:var(--dark); }
+    .form-success p { color:var(--text-light); font-size:0.9rem; margin-top:0.5rem; }
+
+    /* ── ADMIN DASHBOARD ── */
+    #admin-dashboard {
+      display: none;
+      padding: 2rem 4rem;
+      background: var(--dark);
+      position: relative;
+      z-index: 2;
+    }
+    #admin-dashboard.visible { display: block; }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.2rem;
+      max-width: 1100px;
+      margin: 0 auto 2rem;
+    }
+    .dash-card {
+      background: rgba(253,250,244,0.05);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 4px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .dash-card .dash-num { font-family:'Cormorant Garamond',serif; font-size:2.5rem; color:var(--gold-light); font-weight:600; }
+    .dash-card .dash-label { font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; color:rgba(253,250,244,0.5); margin-top:0.3rem; }
+    .dash-card .dash-icon { font-size:1.5rem; color:var(--gold); margin-bottom:0.8rem; }
+    .dash-title { font-family:'Cormorant Garamond',serif; font-size:1.2rem; color:var(--gold-light); margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem; max-width:1100px; margin-left:auto; margin-right:auto; }
+
+    /* Inquiries Table */
+    .inquiries-table-wrap { max-width:1100px; margin:0 auto; overflow-x:auto; }
+    .inquiries-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    .inquiries-table th { background:rgba(201,168,76,0.1); color:var(--gold-light); padding:0.8rem 1rem; text-align:left; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; font-size:0.7rem; }
+    .inquiries-table td { padding:0.8rem 1rem; border-bottom:1px solid rgba(201,168,76,0.08); color:rgba(253,250,244,0.7); vertical-align:top; }
+    .inquiries-table tr:hover td { background:rgba(201,168,76,0.05); }
+    .status-badge { padding:0.2rem 0.5rem; border-radius:3px; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:500; }
+    .status-new { background:rgba(201,168,76,0.2); color:var(--gold-light); }
+    .status-read { background:rgba(253,250,244,0.1); color:rgba(253,250,244,0.4); }
+    .mark-read-btn { background:none; border:none; color:var(--gold); cursor:pointer; font-size:0.75rem; padding:0.2rem 0.4rem; }
+    .mark-read-btn:hover { color:var(--gold-light); }
+
+    .contact-info { padding-top:1rem; }
+    .contact-info h3 { font-family:'Cormorant Garamond',serif; font-size:2rem; color:var(--dark); margin-bottom:0.5rem; }
+    .contact-info > p { color:var(--text-light); font-size:0.9rem; line-height:1.8; margin-bottom:2rem; }
+    .contact-methods { display:flex; flex-direction:column; gap:1rem; margin-bottom:2.5rem; }
+    .contact-method { display:flex; align-items:center; gap:1rem; padding:1rem 1.2rem; background:var(--cream); border-radius:4px; text-decoration:none; transition:var(--transition); border:1px solid transparent; }
+    .contact-method:hover { border-color:var(--gold); background:rgba(201,168,76,0.05); }
+    .contact-method-icon { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+    .contact-method-icon.wa { background:#25D366; color:white; }
+    .contact-method-icon.ph { background:var(--gold); color:var(--dark); }
+    .contact-method-icon.em { background:var(--blush-deep); color:white; }
+    .contact-method-text strong { display:block; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-light); margin-bottom:2px; }
+    .contact-method-text span { font-size:0.9rem; color:var(--dark); }
+    .map-embed { border-radius:4px; overflow:hidden; border:1px solid rgba(201,168,76,0.2); }
+    .map-embed iframe { width:100%; height:200px; display:block; border:none; }
+
+    /* ── FOOTER ── */
+    footer { background:var(--dark); padding:4rem 4rem 2rem; position:relative; z-index:2; }
+    .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr; gap:3rem; max-width:1100px; margin:0 auto 3rem; padding-bottom:3rem; border-bottom:1px solid rgba(201,168,76,0.1); }
+    .footer-brand .script { font-family:'Great Vibes',cursive; font-size:2.2rem; color:var(--gold-light); display:block; margin-bottom:0.8rem; }
+    .footer-brand p { color:rgba(253,250,244,0.5); font-size:0.85rem; line-height:1.8; max-width:280px; }
+    .footer-socials { display:flex; gap:0.7rem; margin-top:1.5rem; }
+    .footer-social { width:38px; height:38px; border:1px solid rgba(201,168,76,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:rgba(201,168,76,0.6); text-decoration:none; font-size:0.85rem; transition:var(--transition); }
+    .footer-social:hover { background:var(--gold); color:var(--dark); border-color:var(--gold); }
+    .footer-col h4 { font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:var(--ivory); margin-bottom:1.2rem; }
+    .footer-links { list-style:none; }
+    .footer-links li { margin-bottom:0.6rem; }
+    .footer-links a { color:rgba(253,250,244,0.45); text-decoration:none; font-size:0.82rem; transition:color 0.3s; display:flex; align-items:center; gap:0.5rem; }
+    .footer-links a:hover { color:var(--gold-light); }
+    .footer-links a i { font-size:0.6rem; color:var(--gold); }
+    .footer-bottom { text-align:center; max-width:1100px; margin:0 auto; color:rgba(253,250,244,0.25); font-size:0.75rem; }
+
+    /* FLOATING WHATSAPP */
+    .floating-wa { position:fixed; bottom:2rem; right:2rem; z-index:500; width:56px; height:56px; background:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:1.4rem; text-decoration:none; box-shadow:0 4px 20px rgba(37,211,102,0.4); transition:var(--transition); animation:waPulse 2.5s infinite; }
+    .floating-wa:hover { transform:scale(1.1); }
+    @keyframes waPulse { 0%,100% { box-shadow:0 4px 20px rgba(37,211,102,0.4); } 50% { box-shadow:0 4px 35px rgba(37,211,102,0.7); } }
+
+    /* ADMIN LOGIN MODAL */
+    #admin-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:4000; align-items:center; justify-content:center; }
+    #admin-modal.open { display:flex; }
+    .admin-login-box { background:var(--ivory); padding:2.5rem; border-radius:4px; width:360px; border-top:3px solid var(--gold); }
+    .admin-login-box h3 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; margin-bottom:0.5rem; color:var(--dark); }
+    .admin-login-box p { font-size:0.82rem; color:var(--text-light); margin-bottom:1.5rem; }
+    #admin-error { color:var(--error); font-size:0.8rem; margin-top:0.5rem; display:none; }
+
+    /* SCROLL TO TOP */
+    #scrolltop { position:fixed; bottom:6rem; right:2rem; width:44px; height:44px; background:var(--gold); color:var(--dark); border:none; border-radius:50%; font-size:1rem; cursor:pointer; display:none; align-items:center; justify-content:center; z-index:500; transition:var(--transition); }
+    #scrolltop.visible { display:flex; }
+    #scrolltop:hover { background:var(--gold-light); transform:translateY(-3px); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:900px) {
+      :root { --sidebar-w: 0px; }
+      #sidebar { transform:translateX(-260px); width:260px; transition:transform 0.3s ease; }
+      #sidebar.open { transform:translateX(0); }
+      #hamburger { display:flex; }
+      #main { margin-left:0; }
+      #particle-canvas { left:0; width:100%; }
+      #about,#events,#gallery,#packages,#testimonials,#contact,footer { padding:4rem 1.5rem; }
+      #admin-dashboard { padding:2rem 1.5rem; }
+      .about-grid,.contact-grid { grid-template-columns:1fr; gap:2.5rem; }
+      .about-image-stack { height:320px; }
+      .testimonials-slider { grid-template-columns:1fr; }
+      .footer-grid { grid-template-columns:1fr; gap:2rem; }
+      .form-row { grid-template-columns:1fr; }
+      .hero-stats { position:relative; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PAGE LOADER -->
+<div id="page-loader">
+  <span class="loader-script">Lameck & Co.</span>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div id="admin-modal">
+  <div class="admin-login-box">
+    <h3><i class="fa fa-shield-halved" style="color:var(--gold);margin-right:0.5rem"></i> Admin Access</h3>
+    <p>Sign in with your Supabase admin credentials to manage the website.</p>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="admin-email" placeholder="admin@lameckevents.co.ke"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="admin-password" placeholder="Enter your password" onkeydown="if(event.key==='Enter')loginAdmin()"/>
+    </div>
+    <p id="admin-error"><i class="fa fa-circle-xmark"></i> <span id="admin-error-msg">Invalid credentials</span></p>
+    <button class="contact-submit" onclick="loginAdmin()" id="admin-login-btn" style="margin-top:1rem">
+      <i class="fa fa-right-to-bracket" style="margin-right:0.5rem"></i> Sign In
+    </button>
+    <button onclick="document.getElementById('admin-modal').classList.remove('open')" style="width:100%;margin-top:0.5rem;background:none;border:1px solid rgba(201,168,76,0.3);color:var(--text-light);padding:0.7rem;cursor:pointer;font-family:'Jost',sans-serif;font-size:0.8rem;">Cancel</button>
+  </div>
+</div>
+
+<!-- ADD EVENT MODAL -->
+<div class="modal-overlay" id="add-event-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('add-event-modal').classList.remove('open')"><i class="fa fa-times"></i></button>
+    <h3>Add New Event Type</h3>
+    <div class="form-group">
+      <label>Event Name *</label>
+      <input type="text" id="new-event-name" placeholder="e.g. Engagement Party"/>
+    </div>
+    <div class="form-group">
+      <label>Description *</label>
+      <textarea id="new-event-desc" rows="3" placeholder="Describe this event type..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Icon (FontAwesome class)</label>
+      <input type="text" id="new-event-icon" placeholder="e.g. fa-heart"/>
+    </div>
+    <div class="form-group">
+      <label>Background Image URL</label>
+      <input type="text" id="new-event-img" placeholder="https://images.unsplash.com/..."/>
+    </div>
+    <div class="form-group">
+      <label>Features (one per line)</label>
+      <textarea id="new-event-features" rows="4" placeholder="Venue coordination&#10;Décor & setup&#10;Catering support"></textarea>
+    </div>
+    <button class="contact-submit" onclick="addNewEvent()" id="add-event-btn" style="margin-top:0.5rem">
+      <i class="fa fa-plus" style="margin-right:0.5rem"></i> Add Event
+    </button>
+  </div>
+</div>
+
+<!-- ADD TESTIMONIAL MODAL -->
+<div class="modal-overlay" id="add-testimonial-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('add-testimonial-modal').classList.remove('open')"><i class="fa fa-times"></i></button>
+    <h3>Share Your Experience</h3>
+    <div class="form-group">
+      <label>Your Name *</label>
+      <input type="text" id="t-name" placeholder="Jane Wanjiku"/>
+    </div>
+    <div class="form-group">
+      <label>Event & Location *</label>
+      <input type="text" id="t-event" placeholder="Wedding — Nairobi"/>
+    </div>
+    <div class="form-group">
+      <label>Your Review *</label>
+      <textarea id="t-quote" rows="4" placeholder="Tell us about your experience..."></textarea>
+    </div>
+    <button class="contact-submit" onclick="submitTestimonial()" id="submit-testimonial-btn" style="margin-top:0.5rem">
+      <i class="fa fa-paper-plane" style="margin-right:0.5rem"></i> Submit Review
+    </button>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()"><i class="fa fa-times"></i></button>
+  <button class="lightbox-nav" id="lightbox-prev" onclick="lightboxNav(-1)"><i class="fa fa-chevron-left"></i></button>
+  <img id="lightbox-img" src="" alt=""/>
+  <p id="lightbox-caption"></p>
+  <button class="lightbox-nav" id="lightbox-next" onclick="lightboxNav(1)"><i class="fa fa-chevron-right"></i></button>
+</div>
+
+<!-- HAMBURGER -->
+<button id="hamburger" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <span class="script">Lameck & Co.</span>
+    <span class="tagline">Events Kenya</span>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="#hero" class="active"><i class="fa fa-home"></i> Home</a></li>
+    <li><a href="#about"><i class="fa fa-users"></i> About Us</a></li>
+    <li><a href="#events"><i class="fa fa-calendar-star"></i> Our Events</a></li>
+    <li><a href="#gallery"><i class="fa fa-images"></i> Gallery</a></li>
+    <li><a href="#packages"><i class="fa fa-gem"></i> Packages</a></li>
+    <li><a href="#testimonials"><i class="fa fa-star"></i> Testimonials</a></li>
+    <li><a href="#contact"><i class="fa fa-envelope"></i> Contact</a></li>
+    <li style="margin-top:1rem;border-top:1px solid rgba(201,168,76,0.1);padding-top:1rem">
+      <a href="#" id="admin-nav-link" onclick="openAdminModal(event)">
+        <i class="fa fa-lock"></i> Admin Panel
+        <span class="admin-badge">ACTIVE</span>
+      </a>
+    </li>
+  </ul>
+  <div class="sidebar-contact-block">
+    <p>Reach Us</p>
+    <a href="tel:+254794253804"><i class="fa fa-phone"></i> +254 700 000 000</a>
+    <a href="https://wa.me/254700000000" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp Us</a>
+    <a href="mailto:lamechkioko1@gmail.com"><i class="fa fa-envelope"></i> lamechkioko1@gmail.com</a>
+  </div>
+</nav>
+
+<!-- PARTICLE CANVAS -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- ── ADMIN DASHBOARD ── -->
+  <div id="admin-dashboard">
+    <p class="dash-title"><i class="fa fa-shield-halved" style="color:var(--gold)"></i> Admin Dashboard</p>
+    <div class="dashboard-grid" id="dashboard-stats">
+      <div class="dash-card"><div class="dash-icon"><i class="fa fa-envelope"></i></div><div class="dash-num" id="stat-inquiries">—</div><div class="dash-label">Total Inquiries</div></div>
+      <div class="dash-card"><div class="dash-icon"><i class="fa fa-bell"></i></div><div class="dash-num" id="stat-new">—</div><div class="dash-label">New (Unread)</div></div>
+      <div class="dash-card"><div class="dash-icon"><i class="fa fa-images"></i></div><div class="dash-num" id="stat-gallery">—</div><div class="dash-label">Gallery Photos</div></div>
+      <div class="dash-card"><div class="dash-icon"><i class="fa fa-calendar-check"></i></div><div class="dash-num" id="stat-events">—</div><div class="dash-label">Event Types</div></div>
+    </div>
+    <p class="dash-title" style="margin-top:1.5rem"><i class="fa fa-inbox" style="color:var(--gold)"></i> Recent Inquiries</p>
+    <div class="inquiries-table-wrap">
+      <table class="inquiries-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Event</th>
+            <th>Date</th>
+            <th>Message</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="inquiries-tbody">
+          <tr><td colspan="7" style="color:rgba(253,250,244,0.3);text-align:center;padding:2rem">Loading inquiries...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── HERO ── -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="shimmer-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow"><i class="fa fa-sparkles"></i> &nbsp; Kenya's Premier Event Planners &nbsp; <i class="fa fa-sparkles"></i></p>
+      <h1 class="hero-title">Lameck & Co. Events</h1>
+      <p class="hero-subtitle">Crafting Unforgettable Moments Across Kenya</p>
+      <p class="hero-desc">From intimate family ceremonies to grand corporate galas — we bring your vision to life with elegance, precision, and heartfelt passion.</p>
+      <div class="hero-btns">
+        <a href="#contact" class="btn-primary">Book Your Event</a>
+        <a href="#events" class="btn-outline">Explore Events</a>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><span class="stat-num" data-target="850">0</span><span class="stat-label">Events Delivered</span></div>
+      <div class="stat-item"><span class="stat-num" data-target="12">0</span><span class="stat-label">Years Experience</span></div>
+      <div class="stat-item"><span class="stat-num" data-target="47">0</span><span class="stat-label">Counties Covered</span></div>
+      <div class="stat-item"><span class="stat-num" data-target="98">0</span><span class="stat-label">% Happy Clients</span></div>
+    </div>
+  </section>
+
+  <!-- ── ABOUT ── -->
+  <section id="about">
+    <div class="about-grid">
+      <div class="about-image-stack reveal">
+        <img class="about-img-main" src="https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80" alt="Wedding event"/>
+        <img class="about-img-accent" src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=600&q=80" alt="Birthday celebration"/>
+        <div class="about-badge"><span>12+</span><span>Years of<br>Excellence</span></div>
+      </div>
+      <div class="about-text reveal">
+        <div class="section-header">
+          <span class="section-eyebrow">Our Story</span>
+          <h2 class="section-title">We Create <em>Memories</em><br>That Last Forever</h2>
+          <div class="divider"></div>
+        </div>
+        <p class="about-body">Lameck & Co. Events was founded on a simple belief — every celebration deserves to be extraordinary. Based across Kenya, our passionate team of event specialists has orchestrated thousands of moments that touched hearts and exceeded expectations.</p>
+        <p class="about-body" style="margin-top:1rem">Whether it's a lavish Nairobi wedding, a village ruracio in Western Kenya, a corporate summit in Mombasa, or a beautiful graduation party — we show up fully, for every budget, every culture, every dream.</p>
+        <div class="about-values">
+          <div class="value-item"><i class="fa fa-check-circle"></i><p><strong>Nationwide Coverage</strong>All 47 counties, any venue</p></div>
+          <div class="value-item"><i class="fa fa-check-circle"></i><p><strong>All Budgets</strong>Tailored to what you can afford</p></div>
+          <div class="value-item"><i class="fa fa-check-circle"></i><p><strong>Culturally Aware</strong>We honour Kenyan traditions</p></div>
+          <div class="value-item"><i class="fa fa-check-circle"></i><p><strong>End-to-End Service</strong>From concept to cleanup</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── EVENTS ── -->
+  <section id="events">
+    <div class="section-header reveal">
+      <span class="section-eyebrow">What We Do</span>
+      <h2 class="section-title">Every Kind of <em>Celebration</em></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="events-tabs reveal" id="event-tabs">
+      <div class="skeleton skeleton-tab"></div>
+      <div class="skeleton skeleton-tab"></div>
+      <div class="skeleton skeleton-tab"></div>
+    </div>
+    <div class="event-display reveal" id="event-display">
+      <div class="skeleton skeleton-panel"></div>
+    </div>
+    <div style="text-align:center" id="add-event-wrap" style="display:none">
+      <button class="add-event-btn" onclick="document.getElementById('add-event-modal').classList.add('open')">
+        <i class="fa fa-plus-circle"></i> Add New Event Type
+      </button>
+    </div>
+  </section>
+
+  <!-- ── GALLERY ── -->
+  <section id="gallery">
+    <div class="section-header reveal">
+      <span class="section-eyebrow">Our Portfolio</span>
+      <h2 class="section-title">Moments We've <em>Crafted</em></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="admin-bar" id="admin-bar">
+      <p><i class="fa fa-shield-halved" style="color:var(--gold);margin-right:0.5rem"></i> Admin Mode — Add or remove gallery photos</p>
+      <div style="display:flex;gap:0.8rem;flex-wrap:wrap">
+        <button class="admin-upload-btn" onclick="document.getElementById('photo-upload-input').click()">
+          <i class="fa fa-upload"></i> Upload Photos
+        </button>
+        <div class="upload-progress" id="upload-progress">
+          <span id="upload-status" style="color:var(--gold-light);font-size:0.78rem"></span>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        </div>
+        <button class="admin-upload-btn" onclick="exitAdmin()" style="background:rgba(253,250,244,0.1);color:var(--gold-light);border:1px solid rgba(201,168,76,0.3);">
+          <i class="fa fa-right-from-bracket"></i> Sign Out
+        </button>
+      </div>
+    </div>
+    <input type="file" id="photo-upload-input" multiple accept="image/*" onchange="handlePhotoUpload(event)"/>
+    <div class="gallery-filter reveal" id="gallery-filter"></div>
+    <div class="gallery-grid reveal" id="gallery-grid">
+      <div class="skeleton" style="height:210px;border-radius:2px"></div>
+      <div class="skeleton" style="height:210px;border-radius:2px"></div>
+      <div class="skeleton" style="height:210px;border-radius:2px"></div>
+    </div>
+  </section>
+
+  <!-- ── PACKAGES ── -->
+  <section id="packages">
+    <div class="section-header reveal">
+      <span class="section-eyebrow">Our Offerings</span>
+      <h2 class="section-title" style="color:var(--ivory)">Choose Your <em style="color:var(--gold-light)">Package</em></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="packages-grid reveal">
+      <div class="package-card">
+        <div class="pkg-icon"><i class="fa fa-leaf"></i></div>
+        <p class="pkg-name">Silver</p><p class="pkg-subtitle">Essential Elegance</p>
+        <ul class="pkg-features">
+          <li><i class="fa fa-check"></i> Event consultation & planning</li>
+          <li><i class="fa fa-check"></i> Basic décor & setup</li>
+          <li><i class="fa fa-check"></i> Vendor coordination</li>
+          <li><i class="fa fa-check"></i> Day-of coordination</li>
+          <li><i class="fa fa-check"></i> Nationwide available</li>
+        </ul>
+        <a href="#contact" class="pkg-cta">Request a Quote</a>
+      </div>
+      <div class="package-card featured">
+        <span class="featured-badge">Most Popular</span>
+        <div class="pkg-icon"><i class="fa fa-crown"></i></div>
+        <p class="pkg-name">Gold</p><p class="pkg-subtitle">Signature Experience</p>
+        <ul class="pkg-features">
+          <li><i class="fa fa-check"></i> Everything in Silver</li>
+          <li><i class="fa fa-check"></i> Premium décor & florals</li>
+          <li><i class="fa fa-check"></i> Photography coordination</li>
+          <li><i class="fa fa-check"></i> MC & entertainment</li>
+          <li><i class="fa fa-check"></i> Catering supervision</li>
+          <li><i class="fa fa-check"></i> Dedicated event manager</li>
+        </ul>
+        <a href="#contact" class="pkg-cta">Request a Quote</a>
+      </div>
+      <div class="package-card">
+        <div class="pkg-icon"><i class="fa fa-gem"></i></div>
+        <p class="pkg-name">Diamond</p><p class="pkg-subtitle">Ultimate Luxury</p>
+        <ul class="pkg-features">
+          <li><i class="fa fa-check"></i> Everything in Gold</li>
+          <li><i class="fa fa-check"></i> Bespoke theme design</li>
+          <li><i class="fa fa-check"></i> Live entertainment</li>
+          <li><i class="fa fa-check"></i> Luxury transport</li>
+          <li><i class="fa fa-check"></i> VIP guest management</li>
+          <li><i class="fa fa-check"></i> Full weekend support</li>
+        </ul>
+        <a href="#contact" class="pkg-cta">Request a Quote</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TESTIMONIALS ── -->
+  <section id="testimonials">
+    <div class="section-header reveal">
+      <span class="section-eyebrow">Client Love</span>
+      <h2 class="section-title">What Our <em>Clients</em> Say</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="testimonials-track">
+      <div class="testimonials-slider reveal" id="testimonials-grid">
+        <div class="skeleton" style="height:220px;border-radius:4px"></div>
+        <div class="skeleton" style="height:220px;border-radius:4px"></div>
+        <div class="skeleton" style="height:220px;border-radius:4px"></div>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <button class="submit-testimonial-btn" onclick="document.getElementById('add-testimonial-modal').classList.add('open')">
+        <i class="fa fa-pen-nib"></i> Share Your Experience
+      </button>
+    </div>
+  </section>
+
+  <!-- ── CONTACT ── -->
+  <section id="contact">
+    <div class="section-header reveal">
+      <span class="section-eyebrow">Get In Touch</span>
+      <h2 class="section-title">Let's Plan Your <em>Dream</em> Event</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-form-box reveal">
+        <h3>Send Us a Message</h3>
+        <p>Fill in your details and we'll get back to you within 24 hours.</p>
+        <div id="contact-form-wrap">
+          <div class="form-row">
+            <div class="form-group"><label>Your Name *</label><input type="text" id="cf-name" placeholder="John Kamau"/></div>
+            <div class="form-group"><label>Phone Number *</label><input type="tel" id="cf-phone" placeholder="+254 7XX XXX XXX"/></div>
+          </div>
+          <div class="form-group"><label>Email Address</label><input type="email" id="cf-email" placeholder="you@example.com"/></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Event Type *</label>
+              <select id="cf-event">
+                <option value="">Select event type</option>
+                <option>Wedding</option><option>Birthday Party</option><option>Corporate Event</option>
+                <option>Ruracio / Traditional</option><option>Graduation Party</option><option>Baby Shower</option>
+                <option>Concert / Show</option><option>Fundraiser</option><option>Church Event</option>
+                <option>Funeral Service</option><option>Product Launch</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Event Date</label><input type="date" id="cf-date"/></div>
+          </div>
+          <div class="form-group"><label>Tell Us About Your Event</label><textarea id="cf-message" rows="4" placeholder="Describe your vision, guest count, venue preference, budget range..."></textarea></div>
+          <button class="contact-submit" onclick="submitContactForm()" id="contact-submit-btn">
+            <i class="fa fa-paper-plane" style="margin-right:0.5rem"></i> Send Message
+          </button>
+        </div>
+        <div class="form-success" id="form-success">
+          <i class="fa fa-circle-check"></i>
+          <h4>Message Sent!</h4>
+          <p>Thank you! We'll reach out within 24 hours to discuss your event.</p>
+          <a href="https://wa.me/254700000000?text=Hi Lameck & Co., I just filled your contact form!" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1.5rem;padding:0.8rem 1.5rem;background:#25D366;color:white;text-decoration:none;border-radius:4px;font-size:0.82rem;">
+            <i class="fab fa-whatsapp"></i> Also Message Us on WhatsApp
+          </a>
+        </div>
+      </div>
+      <div class="contact-info reveal">
+        <h3>We'd Love to Hear From You</h3>
+        <p>Reach us through any of the channels below. We're available Monday–Sunday, 7am–9pm across Kenya.</p>
+        <div class="contact-methods">
+          <a href="https://wa.me/254700000000?text=Hello! I'd like to inquire about your event planning services." target="_blank" class="contact-method">
+            <div class="contact-method-icon wa"><i class="fab fa-whatsapp"></i></div>
+            <div class="contact-method-text"><strong>WhatsApp</strong><span>+254 700 000 000</span></div>
+          </a>
+          <a href="tel:+254794253804" class="contact-method">
+            <div class="contact-method-icon ph"><i class="fa fa-phone"></i></div>
+            <div class="contact-method-text"><strong>Call Us</strong><span>+254 700 000 000</span></div>
+          </a>
+          <a href="mailto:lamechkioko1@gmail.com" class="contact-method">
+            <div class="contact-method-icon em"><i class="fa fa-envelope"></i></div>
+            <div class="contact-method-text"><strong>Email</strong><span>lamechkioko1@gmail.com</span></div>
+          </a>
+        </div>
+        <div class="map-embed">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d255282.35853743808!2d36.68258232011965!3d-1.3031933776018082!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f1172d84d49a7%3A0xf7cf0254b297924c!2sNairobi%2C%20Kenya!5e0!3m2!1sen!2s!4v1715000000000!5m2!1sen!2s" allowfullscreen loading="lazy"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="script">Lameck & Co.</span>
+        <p>Kenya's most trusted event planning company. From Nairobi to Mombasa, from the Rift Valley to the Coast — we bring your celebrations to life, beautifully.</p>
+        <div class="footer-socials">
+          <a href="#" class="footer-social" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="footer-social" title="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="footer-social" title="TikTok"><i class="fab fa-tiktok"></i></a>
+          <a href="https://wa.me/254700000000" class="footer-social" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="#hero"><i class="fa fa-chevron-right"></i> Home</a></li>
+          <li><a href="#about"><i class="fa fa-chevron-right"></i> About Us</a></li>
+          <li><a href="#events"><i class="fa fa-chevron-right"></i> Our Events</a></li>
+          <li><a href="#gallery"><i class="fa fa-chevron-right"></i> Gallery</a></li>
+          <li><a href="#packages"><i class="fa fa-chevron-right"></i> Packages</a></li>
+          <li><a href="#contact"><i class="fa fa-chevron-right"></i> Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Our Events</h4>
+        <ul class="footer-links">
+          <li><a href="#events"><i class="fa fa-chevron-right"></i> Weddings</a></li>
+          <li><a href="#events"><i class="fa fa-chevron-right"></i> Corporate Events</a></li>
+          <li><a href="#events"><i class="fa fa-chevron-right"></i> Birthday Parties</a></li>
+          <li><a href="#events"><i class="fa fa-chevron-right"></i> Ruracio/Traditional</a></li>
+          <li><a href="#events"><i class="fa fa-chevron-right"></i> Graduations</a></li>
+          <li><a href="#events"><i class="fa fa-chevron-right"></i> & Many More</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Lameck & Co. Events. All rights reserved. | Crafting unforgettable moments across Kenya.</p>
+    </div>
+  </footer>
+</div>
+
+<!-- FLOATING WHATSAPP -->
+<a href="https://wa.me/254700000000?text=Hello! I'd like to inquire about your event planning services." class="floating-wa" target="_blank" title="Chat on WhatsApp">
+  <i class="fab fa-whatsapp"></i>
+</a>
+<button id="scrolltop" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fa fa-chevron-up"></i></button>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ═══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://tpibjlqobxfvvufihvjg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwaWJqbHFvYnhmdnZ1ZmlodmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3ODU2MDksImV4cCI6MjA5NDM2MTYwOX0.psoLlal7_42l4rgIdJiFlZNlkclsqitiHAve6SBhYqc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let eventTypes = [];
+let galleryPhotos = [];
+let testimonials = [];
+let currentGalleryFilter = 'All';
+let lightboxIndex = 0;
+let isAdmin = false;
+let filteredPhotos = [];
+
+// ═══════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════
+function toast(msg, type = 'info', duration = 3500) {
+  const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<i class="fa ${icons[type]}"></i> ${msg}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+async function init() {
+  // Check existing session
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
+
+  await Promise.all([
+    loadEventTypes(),
+    loadGallery(),
+    loadTestimonials(),
+  ]);
+
+  if (isAdmin) {
+    showAdminUI();
+    loadDashboard();
+  }
+
+  initParticles();
+  initPetals();
+  initScrollEffects();
+  initCounters();
+  initSidebarHighlight();
+
+  // Hide loader
+  setTimeout(() => {
+    document.getElementById('page-loader').classList.add('hidden');
+  }, 1600);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SUPABASE AUTH
+// ═══════════════════════════════════════════════════════════
+async function loginAdmin() {
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value;
+  const btn = document.getElementById('admin-login-btn');
+  const errEl = document.getElementById('admin-error');
+  const errMsg = document.getElementById('admin-error-msg');
+
+  if (!email || !password) {
+    errMsg.textContent = 'Please enter email and password.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right:0.5rem"></i> Signing in...';
+  errEl.style.display = 'none';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa fa-right-to-bracket" style="margin-right:0.5rem"></i> Sign In';
+
+  if (error) {
+    errMsg.textContent = error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  isAdmin = true;
+  document.body.classList.add('admin-mode');
+  document.getElementById('admin-modal').classList.remove('open');
+  document.getElementById('admin-email').value = '';
+  document.getElementById('admin-password').value = '';
+  showAdminUI();
+  loadDashboard();
+  toast('Welcome back, Admin!', 'success');
+}
+
+async function exitAdmin() {
+  await sb.auth.signOut();
+  isAdmin = false;
+  document.body.classList.remove('admin-mode');
+  document.getElementById('admin-bar').classList.remove('visible');
+  document.getElementById('admin-dashboard').classList.remove('visible');
+  document.getElementById('add-event-wrap').style.display = 'none';
+  toast('Signed out successfully.', 'info');
+}
+
+function showAdminUI() {
+  document.getElementById('admin-bar').classList.add('visible');
+  document.getElementById('admin-dashboard').classList.add('visible');
+  document.getElementById('add-event-wrap').style.display = 'block';
+}
+
+function openAdminModal(e) {
+  e.preventDefault();
+  if (isAdmin) { exitAdmin(); return; }
+  document.getElementById('admin-modal').classList.add('open');
+  setTimeout(() => document.getElementById('admin-email').focus(), 100);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ADMIN DASHBOARD
+// ═══════════════════════════════════════════════════════════
+async function loadDashboard() {
+  // Stats
+  const [{ count: inquiryCount }, { count: newCount }, { count: galleryCount }, { count: eventCount }] = await Promise.all([
+    sb.from('contact_inquiries').select('*', { count: 'exact', head: true }),
+    sb.from('contact_inquiries').select('*', { count: 'exact', head: true }).eq('status', 'new'),
+    sb.from('gallery_photos').select('*', { count: 'exact', head: true }),
+    sb.from('event_types').select('*', { count: 'exact', head: true }),
+  ]);
+
+  document.getElementById('stat-inquiries').textContent = inquiryCount ?? '—';
+  document.getElementById('stat-new').textContent = newCount ?? '—';
+  document.getElementById('stat-gallery').textContent = galleryCount ?? '—';
+  document.getElementById('stat-events').textContent = eventCount ?? '—';
+
+  // Inquiries table
+  const { data: inquiries } = await sb.from('contact_inquiries')
+    .select('*').order('created_at', { ascending: false }).limit(20);
+
+  const tbody = document.getElementById('inquiries-tbody');
+  if (!inquiries || inquiries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:rgba(253,250,244,0.3);text-align:center;padding:2rem">No inquiries yet.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = inquiries.map(inq => `
+    <tr>
+      <td style="font-weight:500;color:rgba(253,250,244,0.9)">${esc(inq.name)}</td>
+      <td><a href="tel:${esc(inq.phone)}" style="color:var(--gold-light);text-decoration:none">${esc(inq.phone)}</a></td>
+      <td>${esc(inq.event_type || '—')}</td>
+      <td>${inq.event_date || '—'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(inq.message || '')}">${esc(inq.message || '—')}</td>
+      <td><span class="status-badge status-${inq.status}">${inq.status}</span></td>
+      <td>
+        ${inq.status === 'new' ? `<button class="mark-read-btn" onclick="markRead('${inq.id}',this)" title="Mark as read"><i class="fa fa-check"></i></button>` : ''}
+        <a href="tel:${esc(inq.phone)}" title="Call" style="color:var(--gold);margin-left:0.4rem;font-size:0.75rem"><i class="fa fa-phone"></i></a>
+      </td>
+    </tr>`).join('');
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+async function markRead(id, btn) {
+  const { error } = await sb.from('contact_inquiries').update({ status: 'read' }).eq('id', id);
+  if (!error) {
+    btn.closest('tr').querySelector('.status-badge').className = 'status-badge status-read';
+    btn.closest('tr').querySelector('.status-badge').textContent = 'read';
+    btn.remove();
+    // Update stat
+    const cur = parseInt(document.getElementById('stat-new').textContent) || 0;
+    document.getElementById('stat-new').textContent = Math.max(0, cur - 1);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENT TYPES
+// ═══════════════════════════════════════════════════════════
+async function loadEventTypes() {
+  const { data, error } = await sb.from('event_types')
+    .select('*').order('display_order', { ascending: true });
+
+  if (error) {
+    toast('Could not load event types.', 'error');
+    return;
+  }
+  eventTypes = data || [];
+  buildEvents();
+}
+
+function buildEvents() {
+  const tabsEl = document.getElementById('event-tabs');
+  const displayEl = document.getElementById('event-display');
+  tabsEl.innerHTML = '';
+  displayEl.innerHTML = '';
+
+  if (eventTypes.length === 0) {
+    displayEl.innerHTML = '<p style="text-align:center;color:var(--text-light);padding:3rem">No events found. Add some via Admin panel.</p>';
+    return;
+  }
+
+  eventTypes.forEach((ev, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'event-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = ev.name;
+    tab.onclick = () => selectEvent(i);
+    tabsEl.appendChild(tab);
+
+    const features = Array.isArray(ev.features) ? ev.features : [];
+    const panel = document.createElement('div');
+    panel.className = 'event-panel' + (i === 0 ? ' active' : '');
+    panel.innerHTML = `
+      <img class="event-bg" src="${ev.img}" alt="${ev.name}" loading="lazy"/>
+      <div class="event-content-overlay">
+        <div class="event-info">
+          <div class="event-icon"><i class="fa ${ev.icon}"></i></div>
+          <h3>${ev.name}</h3>
+          <p>${ev.description}</p>
+          <ul class="event-features">
+            ${features.map(f => `<li><i class="fa fa-diamond"></i>${f}</li>`).join('')}
+          </ul>
+          <a href="#contact" class="btn-primary" style="display:inline-block">Book This Event</a>
+          <div class="event-admin-actions">
+            <button class="event-del-btn" onclick="deleteEventType('${ev.id}')"><i class="fa fa-trash"></i> Delete Event</button>
+          </div>
+        </div>
+      </div>`;
+    displayEl.appendChild(panel);
+  });
+}
+
+function selectEvent(i) {
+  document.querySelectorAll('.event-tab').forEach((t, idx) => t.classList.toggle('active', idx === i));
+  document.querySelectorAll('.event-panel').forEach((p, idx) => p.classList.toggle('active', idx === i));
+}
+
+async function addNewEvent() {
+  if (!isAdmin) { toast('Admin access required.', 'error'); return; }
+  const name = document.getElementById('new-event-name').value.trim();
+  const desc = document.getElementById('new-event-desc').value.trim();
+  const icon = document.getElementById('new-event-icon').value.trim() || 'fa-calendar';
+  const img = document.getElementById('new-event-img').value.trim() || 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1400&q=80';
+  const featuresRaw = document.getElementById('new-event-features').value.trim();
+  const features = featuresRaw ? featuresRaw.split('\n').map(f => f.trim()).filter(Boolean) : ['Full planning & coordination', 'Décor & setup', 'Day-of management'];
+
+  if (!name || !desc) { toast('Name and description are required.', 'error'); return; }
+
+  const btn = document.getElementById('add-event-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+  const { data, error } = await sb.from('event_types').insert({
+    name, icon, img, description: desc, features,
+    display_order: eventTypes.length + 1,
+  }).select().single();
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa fa-plus" style="margin-right:0.5rem"></i> Add Event';
+
+  if (error) { toast('Failed to add event: ' + error.message, 'error'); return; }
+
+  eventTypes.push(data);
+  buildEvents();
+  selectEvent(eventTypes.length - 1);
+  document.getElementById('add-event-modal').classList.remove('open');
+  ['new-event-name','new-event-desc','new-event-icon','new-event-img','new-event-features'].forEach(id => document.getElementById(id).value = '');
+  toast(`"${name}" added successfully!`, 'success');
+  loadDashboard();
+}
+
+async function deleteEventType(id) {
+  if (!isAdmin) return;
+  if (!confirm('Delete this event type? This cannot be undone.')) return;
+  const { error } = await sb.from('event_types').delete().eq('id', id);
+  if (error) { toast('Failed to delete: ' + error.message, 'error'); return; }
+  eventTypes = eventTypes.filter(e => e.id !== id);
+  buildEvents();
+  toast('Event type deleted.', 'success');
+  loadDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GALLERY
+// ═══════════════════════════════════════════════════════════
+async function loadGallery() {
+  const { data, error } = await sb.from('gallery_photos')
+    .select('*').order('created_at', { ascending: false });
+  if (error) { toast('Could not load gallery.', 'error'); return; }
+  galleryPhotos = data || [];
+  buildGallery();
+}
+
+function buildGallery() {
+  const filterEl = document.getElementById('gallery-filter');
+  const gridEl = document.getElementById('gallery-grid');
+
+  const cats = ['All', ...new Set(galleryPhotos.map(p => p.category))];
+  filterEl.innerHTML = cats.map(c =>
+    `<button class="g-filter-btn${c === currentGalleryFilter ? ' active' : ''}" onclick="filterGallery('${c}')">${c}</button>`
+  ).join('');
+
+  filteredPhotos = currentGalleryFilter === 'All' ? galleryPhotos : galleryPhotos.filter(p => p.category === currentGalleryFilter);
+
+  if (filteredPhotos.length === 0) {
+    gridEl.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-light);padding:2rem">No photos yet.</p>';
+    return;
+  }
+
+  gridEl.innerHTML = filteredPhotos.map((p, i) => `
+    <div class="gallery-item" onclick="openLightbox(${i})" data-id="${p.id}">
+      <img src="${p.src}" alt="${p.label}" loading="lazy"/>
+      <div class="gallery-item-overlay"><span class="gallery-item-label">${p.label}</span></div>
+      <div class="gallery-item-actions">
+        <button class="gallery-del-btn" onclick="event.stopPropagation();deletePhoto('${p.id}',${!!p.storage_path},'${p.storage_path||''}')" title="Delete">
+          <i class="fa fa-trash"></i>
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function filterGallery(cat) {
+  currentGalleryFilter = cat;
+  buildGallery();
+}
+
+async function handlePhotoUpload(e) {
+  if (!isAdmin) { toast('Admin access required.', 'error'); return; }
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  const progressWrap = document.getElementById('upload-progress');
+  const progressFill = document.getElementById('progress-fill');
+  const statusEl = document.getElementById('upload-status');
+
+  progressWrap.classList.add('active');
+  let done = 0;
+
+  for (const file of files) {
+    statusEl.textContent = `Uploading ${file.name}...`;
+    const ext = file.name.split('.').pop();
+    const path = `photos/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error: upErr } = await sb.storage.from('gallery').upload(path, file, { cacheControl: '3600', upsert: false });
+    if (upErr) { toast(`Failed: ${file.name}`, 'error'); done++; continue; }
+
+    const { data: { publicUrl } } = sb.storage.from('gallery').getPublicUrl(path);
+
+    const label = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+    const { data: photo, error: dbErr } = await sb.from('gallery_photos').insert({
+      src: publicUrl, label, category: 'Wedding', storage_path: path,
+    }).select().single();
+
+    if (!dbErr && photo) galleryPhotos.unshift(photo);
+    done++;
+    progressFill.style.width = `${(done / files.length) * 100}%`;
+  }
+
+  progressWrap.classList.remove('active');
+  progressFill.style.width = '0';
+  e.target.value = '';
+  buildGallery();
+  toast(`${done} photo${done > 1 ? 's' : ''} uploaded!`, 'success');
+  loadDashboard();
+}
+
+async function deletePhoto(id, hasStorage, storagePath) {
+  if (!isAdmin) return;
+  if (!confirm('Remove this photo from the gallery?')) return;
+
+  if (hasStorage && storagePath) {
+    await sb.storage.from('gallery').remove([storagePath]);
+  }
+  const { error } = await sb.from('gallery_photos').delete().eq('id', id);
+  if (error) { toast('Failed to delete photo.', 'error'); return; }
+  galleryPhotos = galleryPhotos.filter(p => p.id !== id);
+  buildGallery();
+  toast('Photo removed.', 'success');
+  loadDashboard();
+}
+
+// LIGHTBOX
+function openLightbox(index) {
+  lightboxIndex = index;
+  document.getElementById('lightbox-img').src = filteredPhotos[index].src;
+  document.getElementById('lightbox-caption').textContent = filteredPhotos[index].label;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function lightboxNav(dir) {
+  lightboxIndex = (lightboxIndex + dir + filteredPhotos.length) % filteredPhotos.length;
+  document.getElementById('lightbox-img').src = filteredPhotos[lightboxIndex].src;
+  document.getElementById('lightbox-caption').textContent = filteredPhotos[lightboxIndex].label;
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') lightboxNav(-1);
+  if (e.key === 'ArrowRight') lightboxNav(1);
+});
+
+// ═══════════════════════════════════════════════════════════
+//  TESTIMONIALS
+// ═══════════════════════════════════════════════════════════
+async function loadTestimonials() {
+  const { data, error } = await sb.from('testimonials')
+    .select('*').eq('approved', true).order('created_at', { ascending: false });
+  if (error) { toast('Could not load testimonials.', 'error'); return; }
+  testimonials = data || [];
+  buildTestimonials();
+}
+
+function buildTestimonials() {
+  document.getElementById('testimonials-grid').innerHTML = testimonials.map(t => `
+    <div class="testimonial-card">
+      <div class="t-stars">${'★'.repeat(t.stars)}</div>
+      <p class="t-quote">"${t.quote}"</p>
+      <div class="t-author">
+        <div class="t-avatar">${t.initials}</div>
+        <div>
+          <p class="t-name">${t.name}</p>
+          <p class="t-event">${t.event}</p>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function submitTestimonial() {
+  const name = document.getElementById('t-name').value.trim();
+  const event = document.getElementById('t-event').value.trim();
+  const quote = document.getElementById('t-quote').value.trim();
+
+  if (!name || !event || !quote) { toast('All fields are required.', 'error'); return; }
+
+  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const btn = document.getElementById('submit-testimonial-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+
+  const { error } = await sb.from('testimonials').insert({
+    name, event, quote, stars: 5, initials, approved: false,
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa fa-paper-plane" style="margin-right:0.5rem"></i> Submit Review';
+
+  if (error) { toast('Submission failed: ' + error.message, 'error'); return; }
+
+  document.getElementById('add-testimonial-modal').classList.remove('open');
+  ['t-name','t-event','t-quote'].forEach(id => document.getElementById(id).value = '');
+  toast('Thank you! Your review will appear after approval.', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONTACT FORM → SUPABASE + WHATSAPP
+// ═══════════════════════════════════════════════════════════
+async function submitContactForm() {
+  const name = document.getElementById('cf-name').value.trim();
+  const phone = document.getElementById('cf-phone').value.trim();
+  const email = document.getElementById('cf-email').value.trim();
+  const eventType = document.getElementById('cf-event').value;
+  const dateVal = document.getElementById('cf-date').value;
+  const message = document.getElementById('cf-message').value.trim();
+
+  if (!name || !phone || !eventType) {
+    toast('Please fill in your name, phone, and event type.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('contact-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right:0.5rem"></i> Sending...';
+
+  // Save to Supabase
+  const { error } = await sb.from('contact_inquiries').insert({
+    name, phone, email: email || null,
+    event_type: eventType,
+    event_date: dateVal || null,
+    message: message || null,
+    status: 'new',
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa fa-paper-plane" style="margin-right:0.5rem"></i> Send Message';
+
+  if (error) {
+    toast('Failed to send message. Please try WhatsApp directly.', 'error');
+    return;
+  }
+
+  // Also open WhatsApp
+  const wa = `Hello Lameck & Co. Events! 👋\n\nNew Inquiry from your website:\n\n👤 *Name:* ${name}\n📱 *Phone:* ${phone}\n📧 *Email:* ${email||'N/A'}\n🎉 *Event Type:* ${eventType}\n📅 *Date:* ${dateVal||'TBD'}\n\n💬 *Message:* ${message||'Please contact me to discuss my event.'}\n\nThank you!`;
+  window.open(`https://wa.me/254700000000?text=${encodeURIComponent(wa)}`, '_blank');
+
+  document.getElementById('contact-form-wrap').style.display = 'none';
+  document.getElementById('form-success').style.display = 'block';
+  toast('Message sent and saved!', 'success');
+
+  if (isAdmin) loadDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════════════════
+function toggleSidebar() {
+  const sb2 = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  sb2.classList.toggle('open');
+  ov.style.display = sb2.classList.contains('open') ? 'block' : 'none';
+}
+
+function initSidebarHighlight() {
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('.sidebar-nav a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting)
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + en.target.id));
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(s => obs.observe(s));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PARTICLES
+// ═══════════════════════════════════════════════════════════
+function initParticles() {
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  const particles = Array.from({ length: 60 }, () => ({
+    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+    r: Math.random() * 2 + 0.5, vx: (Math.random() - 0.5) * 0.3,
+    vy: (Math.random() - 0.5) * 0.3, alpha: Math.random() * 0.4 + 0.1,
+  }));
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201,168,76,${p.alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+  window.addEventListener('resize', () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; });
+}
+
+function initPetals() {
+  const colors = ['#F2C4CE','#E8A0AE','#C9A84C','#F5E4B0','#FBE9ED'];
+  for (let i = 0; i < 18; i++) {
+    const petal = document.createElement('div');
+    petal.className = 'petal';
+    const size = Math.random() * 10 + 6;
+    petal.style.cssText = `width:${size}px;height:${size*1.3}px;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};opacity:${Math.random()*0.5+0.2};animation-duration:${Math.random()*8+6}s;animation-delay:${Math.random()*10}s;`;
+    document.body.appendChild(petal);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SCROLL EFFECTS
+// ═══════════════════════════════════════════════════════════
+function initScrollEffects() {
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) en.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  reveals.forEach(r => obs.observe(r));
+  window.addEventListener('scroll', () => {
+    document.getElementById('scrolltop').classList.toggle('visible', window.scrollY > 400);
+  });
+}
+
+function initCounters() {
+  const statNums = document.querySelectorAll('.stat-num[data-target]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        const target = parseInt(en.target.dataset.target);
+        let current = 0;
+        const step = Math.ceil(target / 60);
+        const timer = setInterval(() => {
+          current = Math.min(current + step, target);
+          en.target.textContent = current + (en.target.dataset.target === '98' ? '%' : '+');
+          if (current >= target) clearInterval(timer);
+        }, 25);
+        obs.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  statNums.forEach(n => obs.observe(n));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
